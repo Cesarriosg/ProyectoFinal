@@ -38,7 +38,7 @@ app.put('/usuario-inmobiliario/:username', async (req, res) => {
   const { nombre, descripcion, añosExperiencia, proyectosRealizados } = req.body;
 
   try {
-    // Validaciones
+    // Validaciones de los campos
     if (!nombre || !descripcion || isNaN(añosExperiencia) || isNaN(proyectosRealizados)) {
       res.status(400).json({ error: 'Los datos proporcionados son inválidos.' });
       return;
