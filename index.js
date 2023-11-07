@@ -1,8 +1,12 @@
 const express = require ('express')
 const bodyParser = require('body-parser');
-const pool = require('./db');
+const multer = require('multer');
+const pool = require('./bd');
 const app  = express()
 app.use(bodyParser.json());
+
+const storage = multer.memoryStorage();
+const upload = multer({storade: storage});
 
 app.get ('/', (req, res) => {
     res.send ('Servidor 1');
@@ -33,7 +37,12 @@ app.get ('/Registro', (req, res) => {
       
 });
 
-app.put('/usuario-inmobiliario/:username', async (req, res) => {
+app.get('/completar-perfil', (req, res) => {
+  //esto luego se debe conectar con la ruta put
+  res.send('Página de completar perfil frontend');
+});
+
+app.put('/completar-perfil/:username', upload.single('imagen'), async (req, res) => {
   const username = req.params.username; 
   const { nombre, descripcion, añosExperiencia, proyectosRealizados } = req.body;
 
@@ -52,14 +61,17 @@ app.put('/usuario-inmobiliario/:username', async (req, res) => {
       res.status(400).json({ error: 'El valor de proyectos realizados debe estar entre 0 y 1000.' });
       return;
     }
-    // Actualiza el perfil del usuario inmobiliario en la base de datos
-    const updateQuery = "\n      UPDATE usuarios_inmobiliarios\n      SET nombre = $1, descripcion = $2, años_experiencia = $3, proyectos_realizados = $4\n      WHERE username = $5\n    ";
-    await pool.query(updateQuery, [nombre, descripcion, añosExperiencia, proyectosRealizados, username]);
+    // Completa el perfil del usuario inmobiliario en la base de datos
+    const updateQuery = "\n      UPDATE usuarios_inmobiliarios\n      SET nombre = $1, descripcion = $2, años_experiencia = $3, proyectos_realizados = $4, imagen_perfil = $5 \n      WHERE username = $6 \n    ";
+    
+    const imagenPerfil = req.file.buffer;
+    
+    await pool.query(updateQuery, [nombre, descripcion, añosExperiencia, proyectosRealizados, imagenPerfil, username]);
 
-    res.status(200).json({ mensaje: 'Perfil actualizado con éxito' });
+    res.status(200).json({ mensaje: 'Perfil completado con éxito' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error al actualizar el perfil' });
+    res.status(500).json({ error: 'Error al completar el perfil' });
   }
 });
 
